@@ -21,6 +21,7 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
 import java.text.DecimalFormat;
 
 import javax.swing.JFrame;
@@ -30,7 +31,8 @@ import javax.swing.Timer;
 public class Main {
 
 	private static final Dimension FRAME_SIZE = new Dimension(640,480);
-
+	private static final int MAX_RENDER_DISTANCE = 15;
+	private static final int MAX_RENDER_DISTANCE_SQUARED = MAX_RENDER_DISTANCE*MAX_RENDER_DISTANCE;
 	private static final DecimalFormat DF = new DecimalFormat("###0.0#");
 	
 	private TileManager tileManager;
@@ -68,7 +70,7 @@ public class Main {
 		
 		final JFrame frame = new JFrame("raycast");
 		frame.getContentPane().setLayout(new BorderLayout());
-
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.getContentPane().add(panel);
 		
 		frame.setSize(FRAME_SIZE);
@@ -135,22 +137,45 @@ public class Main {
 		
 		public float fps;
 		
+		private BufferedImage buffer;
+		private Graphics bufferGraphics;
+		
 		public final Player player;
 		
 		public MyPanel(Player player) 
 		{
 			this.player = player;
+			setOpaque(false); // enable alpha channel support
+		}
+		
+		private BufferedImage getBuffer() 
+		{
+			if ( buffer == null || buffer.getWidth() != getWidth() || buffer.getHeight() != getHeight() ) 
+			{
+				if ( buffer != null ) {
+					bufferGraphics.dispose();
+				}
+ 				buffer = new BufferedImage(getWidth() , getHeight() , BufferedImage.TYPE_INT_ARGB );
+				bufferGraphics = buffer.createGraphics();
+			}
+			return buffer;
 		}
 		
 		@Override
 		protected void paintComponent(Graphics g) 
 		{
-			super.paintComponent(g);
-			render(g);
-			g.setColor(Color.BLACK);
+			final BufferedImage image = getBuffer();
+
+			bufferGraphics.setColor( getBackground() );
+			bufferGraphics.fillRect( 0 ,  0 ,  image.getWidth() ,  image.getHeight() );
+			render(bufferGraphics);
+			
+			bufferGraphics.setColor(Color.BLACK);
 			
 			final TileId tileId = tileManager.getTile( player.position ).tileId;
-			g.drawString( "FPS:"+ DF.format( fps ) + " ( "+player.position+" @ tile "+tileId.x+" , "+tileId.y+" )", 10 , 15 );				
+			bufferGraphics.drawString( "FPS:"+ DF.format( fps ) + " ( "+player.position+" @ tile "+tileId.x+" , "+tileId.y+" )", 10 , 15 );
+			
+			g.drawImage( image ,  0 , 0 , null );
 		}
 		
 		protected void render(Graphics g) 
@@ -170,13 +195,14 @@ public class Main {
 			cameraPlane.scale(0.66); // player direction is always a normalized vector 
 			
 			final Tile currentTile = tileManager.getTile( player.position );
+forLoop:			
 			for (int x = 0; x < w; x++) 
 			{
 				// calculate ray position and direction
 				final double cameraX = 2.0 * x / w - 1.0; // x-coordinate in camera space (0...1)
 				
 				rayPos.set( currentTile.toLocalCoordinates( player.position ) );
-				rayDir.set(player.direction);
+				rayDir.set( player.direction );
 				
 				rayDir.x += cameraPlane.x * cameraX;
 				rayDir.y += cameraPlane.y * cameraX;
@@ -214,10 +240,10 @@ public class Main {
 				}
 
 				// perform DDA
-				int hit = 0; // was there a wall hit?
 				Side side = Side.NORTH_SOUTH; // was a NS or a EW wall hit?
 				
-				while (hit == 0) {
+				while ( true ) 
+				{
 					// jump to next map square, OR in x-direction, OR in y-direction
 					if (sideDistX < sideDistY) {
 						sideDistX += deltaDistX;
@@ -230,10 +256,15 @@ public class Main {
 					}
 					// Check if ray has hit a wall
 					if ( currentTile.isOccupied(  mapX , mapY ) ) {
-						hit = 1;
+						break;
+					} 
+					double dx = mapX - rayPos.x;
+					double dy = mapY - rayPos.y;
+					if ( (dx*dx+dy*dy) > MAX_RENDER_DISTANCE_SQUARED ) {
+						continue forLoop;
 					}
 				}
-
+				
 				// Calculate distance projected on camera direction (oblique distance will give fisheye effect!)
 				final double perpWallDist;				
 				if (side == Side.NORTH_SOUTH) {
@@ -271,8 +302,13 @@ public class Main {
 					color = tile != null ? tile.darkColor : color;
 				}
 
+				// distance fog - calculate alpha channel value depending on distance
+				int alpha  = 255 - (int) ( 255*( perpWallDist / MAX_RENDER_DISTANCE ) );
+				alpha = alpha > 255 ? 255 : alpha < 0 ? 0 : alpha;
+				
 				// draw the pixels of the stripe as a vertical line
-				g.setColor(color);
+				final int colorWithAlpha = ( color.getRGB() & 0x00ffffff ) | alpha  << 24;				
+				g.setColor(new Color(colorWithAlpha,true));				
 				g.drawLine(x, lineOffset+drawStart, x, lineOffset+drawEnd);
 			} // end for
 		}
