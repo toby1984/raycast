@@ -30,7 +30,7 @@ public class TileManager {
 	
 	private Tile getTile(TileId tileId) 
 	{
-		if ( lastAccessedTile.tileId.equals(tileId )) {
+		if ( lastAccessedTile.tileId.x == tileId.x && lastAccessedTile.tileId.y == tileId.y ) {
 			return lastAccessedTile;
 		}
 		Tile cached = tileCache.get( tileId );
@@ -81,6 +81,7 @@ public class TileManager {
 	
 	public final Wall getWallFast(double globalX,double globalY)
 	{
+		// same algorithm as getWallSlow() but without all the intermediate object creation
 		final int tileX = (int) Math.floor( (globalX + halfTileSize) / tileSize);
 		final int tileY = (int) Math.floor( (globalY + halfTileSize) / tileSize);
 		final TileId tileId = new TileId(tileX,tileY);

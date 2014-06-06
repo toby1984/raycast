@@ -35,9 +35,11 @@ public class Main {
 	private static final int MAX_RENDER_DISTANCE = 40;
 	private static final int MAX_RENDER_DISTANCE_SQUARED = MAX_RENDER_DISTANCE*MAX_RENDER_DISTANCE;
 	
-	private static final boolean RENDER_DISTANCE_FOG = true;
+	private static final boolean RENDER_DISTANCE_FOG = false;
 	
 	private static final DecimalFormat DF = new DecimalFormat("###0.0#");
+
+	private static final boolean BENCHMARK_MODE = false;
 	
 	private TileManager tileManager;
 	private Player player;
@@ -116,6 +118,10 @@ public class Main {
 	
 	private void gameLoop(float deltaSeconds) 
 	{
+		if ( BENCHMARK_MODE ) {
+			player.forward( 0.1 );
+		}
+		
 		// apply movement
 		inputController.processInput();
 		
@@ -132,6 +138,10 @@ public class Main {
 			float avgSecondsPerFrame = totalFrameTimeSeconds / totalFrames;
 			panel.fps = 1.0f / avgSecondsPerFrame;
 			
+			if ( BENCHMARK_MODE && totalFrames == 1000 ) {
+				System.out.println("Benchmark finished: FPS: "+panel.fps);
+				System.exit(1);
+			}
 			// redraw panel
 			panel.paintImmediately( 0 ,  0 ,  panel.getWidth() ,  panel.getHeight() );
 		}		
