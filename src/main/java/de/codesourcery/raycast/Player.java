@@ -23,7 +23,7 @@ public abstract class Player
 	public static final float MAX_Z = 5;
 	public static final float MAX_ACCELERATION = 2;
 	
-	public final GlobalCoordinates position;
+	public final Vec2d position;
 	public final Vec2d direction;
 	
 	private float zAcceleration;
@@ -32,8 +32,8 @@ public abstract class Player
 	
 	private boolean hasMoved = true;
 	
-	public Player(GlobalCoordinates pos,Vec2d direction) {
-		this.position = new GlobalCoordinates(pos);
+	public Player(Vec2d pos,Vec2d direction) {
+		this.position = new Vec2d(pos);
 		this.direction = new Vec2d(direction);
 		this.direction.normalize();
 	}

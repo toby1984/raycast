@@ -54,12 +54,4 @@ public class Tile {
 	public boolean isFree(int x,int y) {
 		return tiles[x][y] == null;
 	}	
-	
-	public LocalCoordinates toLocalCoordinates(GlobalCoordinates in) {
-		return in.toLocalCoordinates( this.tileId , tileSize ); 
-	}
-	
-	public GlobalCoordinates toGlobalCoordinates(LocalCoordinates in) {
-		return in.toGlobalCoordinates( this.tileId ,  tileSize );
-	}	
 }

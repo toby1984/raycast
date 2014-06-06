@@ -31,8 +31,12 @@ import javax.swing.Timer;
 public class Main {
 
 	private static final Dimension FRAME_SIZE = new Dimension(640,480);
-	private static final int MAX_RENDER_DISTANCE = 15;
+	
+	private static final int MAX_RENDER_DISTANCE = 40;
 	private static final int MAX_RENDER_DISTANCE_SQUARED = MAX_RENDER_DISTANCE*MAX_RENDER_DISTANCE;
+	
+	private static final boolean RENDER_DISTANCE_FOG = true;
+	
 	private static final DecimalFormat DF = new DecimalFormat("###0.0#");
 	
 	private TileManager tileManager;
@@ -53,20 +57,24 @@ public class Main {
 
 	private void run(String[] args) 
 	{
-		tileManager = new TileManager( new TileFactory(24) );
+		tileManager = new TileManager( new TileFactory(25) );
 		
-		player = new Player( new GlobalCoordinates(22,12) ,  new Vec2d( -1 , 0 ) ) 
+		player = new Player( new Vec2d(0,0) ,  new Vec2d( -1 , 0 ) ) 
 		{
 			@Override
 			protected boolean canMoveTo(double newX, double newY) 
 			{
-				final Tile currentTile = tileManager.getTile( player.position );
-				return currentTile.isFree( (int) newX , (int) position.y ) &&
-				       currentTile.isFree( (int) position.x, (int) newY ) &&
-				       currentTile.isFree( (int) newX , (int) newY );
+				return isFree( newX , position.y ) &&
+				        isFree( position.x, newY ) &&
+				        isFree( newX , newY );
+			}
+			
+			private boolean isFree(double x,double y) {
+				return tileManager.getWallFast( x ,y ) == null;
 			}
 		};
-		panel = new MyPanel( player );
+		
+		panel = new MyPanel( player , RENDER_DISTANCE_FOG );
 		
 		final JFrame frame = new JFrame("raycast");
 		frame.getContentPane().setLayout(new BorderLayout());
@@ -131,7 +139,7 @@ public class Main {
 	
 	protected class MyPanel extends JPanel {
 
-		final LocalCoordinates rayPos = new LocalCoordinates();
+		final Vec2d rayPos = new Vec2d();
 		final Vec2d rayDir = new Vec2d();
 		final Vec2d cameraPlane = new Vec2d();		
 		
@@ -140,12 +148,16 @@ public class Main {
 		private BufferedImage buffer;
 		private Graphics bufferGraphics;
 		
+		private final boolean renderDistanceFog;
 		public final Player player;
 		
-		public MyPanel(Player player) 
+		public MyPanel(Player player,boolean renderDistanceFog) 
 		{
 			this.player = player;
-			setOpaque(false); // enable alpha channel support
+			this.renderDistanceFog = renderDistanceFog;
+			if ( renderDistanceFog ) {
+				setOpaque(false); // enable alpha channel support
+			}
 		}
 		
 		private BufferedImage getBuffer() 
@@ -164,6 +176,7 @@ public class Main {
 		@Override
 		protected void paintComponent(Graphics g) 
 		{
+			long start = System.currentTimeMillis();
 			final BufferedImage image = getBuffer();
 
 			bufferGraphics.setColor( getBackground() );
@@ -172,10 +185,13 @@ public class Main {
 			
 			bufferGraphics.setColor(Color.BLACK);
 			
-			final TileId tileId = tileManager.getTile( player.position ).tileId;
+			final TileId tileId = tileManager.getTileId( player.position );
 			bufferGraphics.drawString( "FPS:"+ DF.format( fps ) + " ( "+player.position+" @ tile "+tileId.x+" , "+tileId.y+" )", 10 , 15 );
 			
 			g.drawImage( image ,  0 , 0 , null );
+			
+			final long totalTime = System.currentTimeMillis() - start;
+			g.drawString( "Frame time: "+totalTime+" ms" , 10 , 30 );
 		}
 		
 		protected void render(Graphics g) 
@@ -194,14 +210,13 @@ public class Main {
 			cameraPlane.rotY( -90 );
 			cameraPlane.scale(0.66); // player direction is always a normalized vector 
 			
-			final Tile currentTile = tileManager.getTile( player.position );
 forLoop:			
 			for (int x = 0; x < w; x++) 
 			{
 				// calculate ray position and direction
 				final double cameraX = 2.0 * x / w - 1.0; // x-coordinate in camera space (0...1)
 				
-				rayPos.set( currentTile.toLocalCoordinates( player.position ) );
+				rayPos.set( player.position );
 				rayDir.set( player.direction );
 				
 				rayDir.x += cameraPlane.x * cameraX;
@@ -242,6 +257,7 @@ forLoop:
 				// perform DDA
 				Side side = Side.NORTH_SOUTH; // was a NS or a EW wall hit?
 				
+				Wall wall = null;
 				while ( true ) 
 				{
 					// jump to next map square, OR in x-direction, OR in y-direction
@@ -255,7 +271,8 @@ forLoop:
 						side = Side.EAST_WEST;
 					}
 					// Check if ray has hit a wall
-					if ( currentTile.isOccupied(  mapX , mapY ) ) {
+					wall = tileManager.getWallFast( mapX ,  mapY );
+					if ( wall != null ) {
 						break;
 					} 
 					double dx = mapX - rayPos.x;
@@ -278,7 +295,7 @@ forLoop:
 				final int lineOffset = (int) ( ( h * zCoordinate ) / perpWallDist);
 				
 				// Calculate height of line to draw on screen
-				final int lineHeight = Math.abs((int) ( 2*h / perpWallDist*0.5f));
+				final int lineHeight = Math.abs((int) ( 3*h / perpWallDist*0.5f));
 				
 				// calculate lowest and highest pixel to fill in current stripe
 				int drawStart = -lineHeight / 2 + h / 2;
@@ -291,24 +308,20 @@ forLoop:
 				}
 
 				// choose wall color
-				final Wall tile = currentTile.getWall( mapX , mapY );
-				Color color = Color.YELLOW;
-				if ( tile != null ) {
-					color = tile.lightColor;
-				} 
-
 				// give x and y sides different brightness
-				if (side == Side.EAST_WEST) {
-					color = tile != null ? tile.darkColor : color;
-				}
+				Color color = side == Side.EAST_WEST ? wall.darkColor : wall.lightColor;
 
-				// distance fog - calculate alpha channel value depending on distance
-				int alpha  = 255 - (int) ( 255*( perpWallDist / MAX_RENDER_DISTANCE ) );
-				alpha = alpha > 255 ? 255 : alpha < 0 ? 0 : alpha;
-				
-				// draw the pixels of the stripe as a vertical line
-				final int colorWithAlpha = ( color.getRGB() & 0x00ffffff ) | alpha  << 24;				
-				g.setColor(new Color(colorWithAlpha,true));				
+				// distance fog - calculate alpha channel value depending on distance				
+				if ( renderDistanceFog ) 
+				{
+					int alpha  = 255 - (int) ( 255*( perpWallDist / MAX_RENDER_DISTANCE ) );
+					alpha = alpha > 255 ? 255 : alpha < 0 ? 0 : alpha;
+					
+					// draw the pixels of the stripe as a vertical line
+					final int colorWithAlpha = ( color.getRGB() & 0x00ffffff ) | alpha  << 24;				
+					color = new Color(colorWithAlpha,true);
+				} 
+				g.setColor(color);
 				g.drawLine(x, lineOffset+drawStart, x, lineOffset+drawEnd);
 			} // end for
 		}
