@@ -32,7 +32,7 @@ public class Main {
 
 	private static final Dimension FRAME_SIZE = new Dimension(640,480);
 	
-	private static final int MAX_RENDER_DISTANCE = 40;
+	private static final int MAX_RENDER_DISTANCE = 80;
 	private static final int MAX_RENDER_DISTANCE_SQUARED = MAX_RENDER_DISTANCE*MAX_RENDER_DISTANCE;
 	
 	private static final boolean RENDER_DISTANCE_FOG = false;
