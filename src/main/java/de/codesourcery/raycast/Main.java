@@ -61,7 +61,7 @@ public class Main {
 	{
 		tileManager = new TileManager( new TileFactory(25) );
 		
-		player = new Player( new Vec2d(0,0) ,  new Vec2d( -1 , 0 ) ) 
+		player = new Player( tileManager.getStartingPosition() ,  new Vec2d( -1 , 0 ) ) 
 		{
 			@Override
 			protected boolean canMoveTo(double newX, double newY) 

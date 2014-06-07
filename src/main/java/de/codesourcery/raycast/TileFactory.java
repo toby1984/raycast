@@ -40,6 +40,21 @@ public class TileFactory {
 	
 	public Tile createTile(TileId coordinates) 
 	{
+		return createMazeTile( coordinates );
+	}
+	
+	public Tile createMazeTile(TileId coordinates) 
+	{
+		Maze maze = new Maze(tileSize/3);
+		maze.generateMaze( coordinates.hashCode()*3 );
+		
+		final Wall[][] walls = newWallArray();
+		Maze.renderMaze(maze, walls , tileSize , tileSize , false );
+		return new Tile(coordinates,tileSize, walls );
+	}	
+	
+	private Tile createTileSimple(TileId coordinates) 
+	{
 		// 25x25
 //		final int map[][] = {
 //			{ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
