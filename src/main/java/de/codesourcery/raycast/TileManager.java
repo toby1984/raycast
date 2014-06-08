@@ -121,7 +121,12 @@ public class TileManager {
 		return new Vec2d(locX,locY);
 	}
 	
-	public final Wall getWallSlow(double globalX,double globalY)
+	public final Wall getWall(double globalX,double globalY)
+	{
+		return getWallFast(globalX,globalY);
+	}	
+	
+	private final Wall getWallSlow(double globalX,double globalY)
 	{
 		final TileId tileId = getTileId( globalX , globalY);
 		final Vec2d local = toLocalCoordinates( tileId , globalX, globalY);
@@ -137,7 +142,7 @@ public class TileManager {
 		return new Vec2d(locX,locY);
 	}	
 	
-	public final Wall getWallFast(double globalX,double globalY)
+	private final Wall getWallFast(double globalX,double globalY)
 	{
 		// same algorithm as getWallSlow() but without all the intermediate object creation
 		

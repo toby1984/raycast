@@ -101,6 +101,6 @@ public final class Vec2d
 
 	@Override
 	public String toString() {
-		return "Vec2d [x=" + x + ", y=" + y + "]";
+		return "[" + x + ", " + y + "]";
 	}
 }

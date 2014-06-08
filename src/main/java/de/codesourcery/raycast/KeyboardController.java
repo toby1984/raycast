@@ -67,6 +67,8 @@ public class KeyboardController implements InputController {
 	
 	public void processInput() 
 	{
+		ifPressed( KeyEvent.VK_BACK_SPACE , player::resetOrientation );
+				
 		ifPressed( KeyEvent.VK_PLUS , () -> { renderer.zoomIn(0.1); } ,
 				   KeyEvent.VK_MINUS , () -> { renderer.zoomOut(0.1); } );
 		

@@ -21,6 +21,8 @@ public interface InputController {
 
 	public static final double TRANSLATION_SPEED = 0.025;
 	
+	public static final double ROTATION_SPEED = 0.5;	
+	
 	public void attach(JComponent comp);
 	
 	public void detach();

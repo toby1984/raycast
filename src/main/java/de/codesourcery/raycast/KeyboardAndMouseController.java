@@ -24,8 +24,6 @@ import javax.swing.JComponent;
 
 public class KeyboardAndMouseController extends KeyboardController {
 
-	public static final double ROTATION_SPEED = 0.5;
-	
 	private int lastX=-1;
 	
 	private boolean isTrackingMouse = false;
@@ -36,7 +34,7 @@ public class KeyboardAndMouseController extends KeyboardController {
 		{
 			if ( isTrackingMouse ) 
 			{
-				final int dx = lastX - e.getX();
+				final int dx = e.getX() - lastX;
 				lastX = e.getX();				
 				player.rotate(dx*ROTATION_SPEED);
 			}

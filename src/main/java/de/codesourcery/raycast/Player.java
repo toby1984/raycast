@@ -87,17 +87,26 @@ public abstract class Player
 		return setMoved( maybeMoveTo(newX, newY) ); 
 	}	
 	
-	public boolean rotate(double angleInDegrees) {
-		heading += angleInDegrees;
-		if ( heading < 0 ) {
-			heading += 360;
+	public void resetOrientation() {
+		setHeading(0);
+	}	
+	
+	public boolean setHeading(double angleInDegrees) {
+		while( angleInDegrees >= 360 ) {
+			angleInDegrees-=360;
 		}
-		if ( heading >= 360 ) {
-			heading -= 360;
-		}		
+		while( angleInDegrees < 0 ) {
+			angleInDegrees += 360;
+		}
+		this.heading = angleInDegrees;
 		direction.set( new Vec2d(INITIAL_HEADING).rotZ( heading ) );
 		hasMoved = true;
-		return true;
+		return true;		
+	}
+	
+	public boolean rotate(double angleInDegrees) {
+		heading += angleInDegrees;
+		return setHeading( heading );
 	}
 	
 	public void jump() {

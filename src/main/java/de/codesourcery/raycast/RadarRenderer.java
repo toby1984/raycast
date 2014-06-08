@@ -1,21 +1,19 @@
 package de.codesourcery.raycast;
 
-import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
-import java.awt.Stroke;
 
 public class RadarRenderer {
 
-	private final TileManager factory;
+	private final TileManager tileManager;
 	private final Player player;
 	
 	private double zoomFactor = 2.0d;
 	private boolean zoomFactorChanged = true;
 	
 	public RadarRenderer(TileManager factory,Player player) {
-		this.factory = factory;
+		this.tileManager = factory;
 		this.player = player;
 	}
 	
@@ -47,29 +45,35 @@ public class RadarRenderer {
 		g.setColor(Color.BLACK);
 		g.drawRect( r.x , r.y , r.width-1 , r.height-1 );
 		
-		final double tileSize = factory.tileSize()*zoomFactor;
+		final int tileSize = (int) Math.max( 2 , tileManager.tileSize()*zoomFactor );
 		
-		Vec2d pCenter = new Vec2d(player.direction).scale( tileSize / 2.0d ).add( player.position );
-		Vec2d vXAxis = new Vec2d(player.direction).rotZ( 90 );
-		Vec2d vYAxis = new Vec2d(player.direction).flip();		
+		final TileId tileId = tileManager.getTileId( player.position );
 		
-		Vec2d p0 = new Vec2d( pCenter) .sub( new Vec2d( vXAxis).scale( tileSize  /2.0d  ) );
-
-		final double stepX = (r.width-2.0d)  / tileSize;
-		final double stepY = (r.height-2.0d) / tileSize;
+		Vec2d local = tileManager.toLocalCoordinates( player.position.x , player.position.y );
+		Vec2d global = tileManager.toGlobalCoordinates( tileId , (int) local.x , (int) local.y );
 		
-		for ( int x = 0 ; x < tileSize ; x++ ) 
+		final double xmin = global.x - (tileSize/2.0);
+		final double xmax = global.x + (tileSize/2.0);
+		
+		final double ymin = global.y - (tileSize/2.0);
+		final double ymax = global.y + (tileSize/2.0);		
+		
+		double stepX = (r.width-2) / (double) tileSize;
+		double stepY = (r.height-2) / (double) tileSize;
+		
+		int ix = 0;
+		int iy = 0;
+		for ( double x = xmin  ; x < xmax ; x+=1 , ix++ ) 
 		{
-			for ( int y = 0 ; y < tileSize ; y++ ) 
+			iy = 0;
+			for ( double y = ymin ; y < ymax; y+=1 , iy++ ) 
 			{
-				final Vec2d v = new Vec2d(p0).multiplyAndAdd( vXAxis , x ).multiplyAndAdd( vYAxis , y );
-				
-				final double x0 = Math.floor( r.x + 1 + x*stepX );
-				final double y0 = Math.floor( r.y + 1 + y*stepY );
+				final double x0 = Math.floor( r.x + 1 + ix*stepX );
+				final double y0 = Math.floor( r.y + 1 + iy*stepY );
 				final double x1 = x0 + stepX;
 				final double y1 = y0 + stepY;
 				
-				final Wall wall = factory.getWallFast( v.x,v.y);
+				final Wall wall = tileManager.getWall( x , y );
 				if ( wall != null ) 
 				{
 					g.setColor(wall.darkColor);

@@ -63,8 +63,7 @@ public class Main {
 	{
 		tileManager = new TileManager( new TileFactory(25) );
 		
-//		final Vec2d startingPosition = tileManager.getStartingPosition();
-		final Vec2d startingPosition = new Vec2d(0,0);
+		final Vec2d startingPosition = tileManager.getStartingPosition();
 		player = new Player( startingPosition ) 
 		{
 			@Override
@@ -76,7 +75,7 @@ public class Main {
 			}
 			
 			private boolean isFree(double x,double y) {
-				return tileManager.getWallFast( x ,y ) == null;
+				return tileManager.getWall( x ,y ) == null;
 			}
 		};
 		
@@ -201,14 +200,14 @@ public class Main {
 			
 			render(bufferGraphics);
 			
-			// render tile
-			final int width = (int) (getWidth()*0.3);
-			final int height = (int) (getWidth()*0.3);
+			// render radar
+			final int radarWidth = (int) (getWidth()*0.2);
+			final int radarHeight = (int) (getWidth()*0.2);
 			
-			final int x0 = (int) (getWidth() - width*1.5);
+			final int x0 = getWidth() - radarWidth -10;
 			final int y0 = 20;
 			
-			radarRenderer.render( new Rectangle(x0,y0,width,height ) , bufferGraphics , getBackground() ) ;
+			radarRenderer.render( new Rectangle(x0,y0,radarWidth,radarHeight ) , bufferGraphics , getBackground() ) ;
 			
 			// render debug info
 			bufferGraphics.setColor(Color.BLACK);
@@ -237,30 +236,29 @@ public class Main {
 			 */
 			
 			cameraPlane.set( player.direction );
-			cameraPlane.rotZ( -90 );
-			cameraPlane.scale(0.66); // player direction is always a normalized vector 
+			cameraPlane.rotZ( 90 );
+			cameraPlane.scale(0.66); 
 			
 //			System.out.println("=========== Rendering ============");
 			
-			final int xCenter = w/2;
 forLoop:			
 			for (int x = 0; x < w; x++) 
 			{
 				// calculate ray position and direction
-				final double cameraX = 2.0 * x / w - 1.0; // x-coordinate in camera space (0...1)
+				final double cameraX = 2.0 * x / w - 1.0; // x-coordinate in camera space (-1...1)
 				
 				rayPos.set( player.position );
 				
 				// which box of the map we're in
-				int mapX = (int) rayPos.x;
-				int mapY = (int) rayPos.y;				
+				int mapX = (int) Math.floor( rayPos.x );
+				int mapY = (int) Math.floor( rayPos.y );
 				
 				rayDir.set( player.direction );
-				rayDir.x += cameraPlane.x * cameraX;
-				rayDir.y += cameraPlane.y * cameraX;
+				rayDir.x += (cameraPlane.x * cameraX);
+				rayDir.y += (cameraPlane.y * cameraX);
 
 				// length of ray from one x or y-side to next x or y-side
-				final double deltaDistX = Math.sqrt(1 + (rayDir.y * rayDir.y) / (rayDir.x * rayDir.x));
+				final double deltaDistX = Math.sqrt(1 + (rayDir.y * rayDir.y) / (rayDir.x * rayDir.x)); // = Math.sqrt( dx^2 + dy^2) = Math.sqrt( 1*1 + (y/x)^2 )
 				final double deltaDistY = Math.sqrt(1 + (rayDir.x * rayDir.x) / (rayDir.y * rayDir.y));
 
 				// calculate step and initial sideDist
@@ -297,14 +295,14 @@ forLoop:
 					if (sideDistX < sideDistY) {
 						sideDistX += deltaDistX;
 						mapX += stepX;
-						side = Side.NORTH_SOUTH;
+						side = Side.EAST_WEST;
 					} else {
 						sideDistY += deltaDistY;
 						mapY += stepY;
-						side = Side.EAST_WEST;
+						side = Side.NORTH_SOUTH;
 					}
 					// Check if ray has hit a wall
-					wall = tileManager.getWallFast( mapX ,  mapY );
+					wall = tileManager.getWall( mapX ,  mapY );
 					if ( wall != null ) {
 						break;
 					} 
@@ -317,7 +315,7 @@ forLoop:
 				
 				// Calculate distance projected on camera direction (oblique distance will give fisheye effect!)
 				final double perpWallDist;				
-				if (side == Side.NORTH_SOUTH) {
+				if (side == Side.EAST_WEST) {
 					perpWallDist = Math.abs((mapX - rayPos.x + (1 - stepX) / 2) / rayDir.x);
 				} else {
 					perpWallDist = Math.abs((mapY - rayPos.y + (1 - stepY) / 2) / rayDir.y);
@@ -342,8 +340,7 @@ forLoop:
 
 				// choose wall color
 				// give x and y sides different brightness
-//				Color color = side == Side.EAST_WEST ? wall.darkColor : wall.lightColor;
-				Color color = wall.darkColor;
+				Color color = side == Side.EAST_WEST ? wall.darkColor : wall.lightColor;
 
 				// distance fog - calculate alpha channel value depending on distance				
 				if ( renderDistanceFog ) 
@@ -357,12 +354,6 @@ forLoop:
 				} 
 				g.setColor(color);
 				g.drawLine(x, lineOffset+drawStart, x, lineOffset+drawEnd);
-				
-				if ( x == xCenter ) {
-					g.setColor(Color.GREEN);
-					g.drawLine(x,0,x,h);
-//					System.out.println("Hit "+side+" wall at ("+mapX+","+mapY+") with distance "+perpWallDist);
-				}				
 			} // end for
 		}
 	}
