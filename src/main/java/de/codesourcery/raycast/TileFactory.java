@@ -40,8 +40,8 @@ public class TileFactory {
 	
 	public Tile createTile(TileId coordinates) 
 	{
-		return createMazeTile( coordinates );
-//		return createFixedTile( coordinates );		
+//		return createMazeTile( coordinates );
+		return createFixedTile( coordinates );		
 	}
 	
 	public Tile createMazeTile(TileId coordinates) 

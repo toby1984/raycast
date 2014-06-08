@@ -239,7 +239,8 @@ public class Main {
 			cameraPlane.rotZ( -90 );
 			cameraPlane.scale(0.66); // player direction is always a normalized vector 
 			
-			System.out.println("=========== Rendering ============");
+//			System.out.println("=========== Rendering ============");
+			
 			final int xCenter = w/2;
 forLoop:			
 			for (int x = 0; x < w; x++) 
@@ -359,7 +360,7 @@ forLoop:
 				if ( x == xCenter ) {
 					g.setColor(Color.GREEN);
 					g.drawLine(x,0,x,h);
-					System.out.println("Hit "+side+" wall at ("+mapX+","+mapY+") with distance "+perpWallDist);
+//					System.out.println("Hit "+side+" wall at ("+mapX+","+mapY+") with distance "+perpWallDist);
 				}				
 			} // end for
 		}

@@ -26,10 +26,14 @@ public class RadarRenderer {
 		g.setColor(Color.BLACK);
 		g.drawRect( r.x , r.y , r.width-1 , r.height-1 );
 		
-		TileId tileId = factory.getTileId( player.position );
-		final Tile tile = factory.getTile( tileId );
+		final int tileSize = factory.tileSize()*2;
 		
-		final int tileSize = factory.tileSize();
+		Vec2d pCenter = new Vec2d(player.direction).scale( tileSize / 2.0d ).add( player.position );
+		Vec2d vXAxis = new Vec2d(player.direction).rotZ( 90 );
+		Vec2d vYAxis = new Vec2d(player.direction).flip();		
+		
+		Vec2d p0 = new Vec2d( pCenter) .sub( new Vec2d( vXAxis).scale( tileSize  /2.0d  ) );
+
 		final float stepX = (r.width-2.0f)  / (float) tileSize;
 		final float stepY = (r.height-2.0f) / (float) tileSize;
 		
@@ -37,12 +41,14 @@ public class RadarRenderer {
 		{
 			for ( int y = 0 ; y < tileSize ; y++ ) 
 			{
+				final Vec2d v = new Vec2d(p0).add( new Vec2d( vXAxis ).scale( x ) ).add( new Vec2d( vYAxis ).scale( y ) );
+				
 				final float x0 = r.x + 1 + x*stepX;
 				final float y0 = r.y + 1 + y*stepY;
 				final float x1 = x0 + stepX;
 				final float y1 = y0 + stepY;
 				
-				final Wall wall = tile.getWall(x,y);
+				final Wall wall = factory.getWallFast( v.x,v.y);
 				if ( wall != null ) 
 				{
 					g.setColor(wall.darkColor);
@@ -52,24 +58,15 @@ public class RadarRenderer {
 		}
 		
 		// mark player position
-		final Vec2d playerPos = factory.toLocalCoordinates( tileId ,  player.position.x ,  player.position.y );
-		final Vec2d playerHeading = new Vec2d(player.direction).scale(1.5).add( playerPos );
+		final Vec2d playerHeading = new Vec2d(player.direction).scale(1.5);
 		
 		// transform player position
-		double p0x = playerPos.x / factory.tileSize(); // 0...1
-		double p0y = playerPos.y / factory.tileSize();
-		
-		int x0 = r.x + 1 + Math.round( (r.width-2)  *  (float) p0x );
-		int y0 = r.y + 1 + Math.round( (r.height-2) *  (float) p0y );
-		
-		System.out.println("px="+p0x+" , py= "+p0y);
+		int x0 = r.x + 1 + Math.round( ( (r.width - 2) / 2.0f ) );
+		int y0 = r.y + 1 + Math.round( ( (r.height - 2) / 2.0f ) );
 		
 		// transform player heading
-		double p1x = playerHeading.x / factory.tileSize(); // 0...1
-		double p1y = playerHeading.y / factory.tileSize();
-		
-		int x1 = r.x + 1 + Math.round( (r.width-2)  *  (float) p1x );
-		int y1 = r.y + 1 + Math.round( (r.height-2) *  (float) p1y );		
+		int x1 = Math.round( x0 + (float) playerHeading.x );
+		int y1 = Math.round( y0 + (float) playerHeading.y );
 		
 		g.setColor(Color.RED);
 		
@@ -78,8 +75,5 @@ public class RadarRenderer {
 		g.setStroke( new BasicStroke(2));
 		g.drawLine( x0,y0 ,x1,y1 );
 		g.setStroke(oldStroke);
-		
-//		g.drawLine( x0 , r.y+1 , x0 , r.y+r.height-2 );
-//		g.drawLine( r.x+1 , y0 , r.x + r.width -2 , y0 );
 	}
 }

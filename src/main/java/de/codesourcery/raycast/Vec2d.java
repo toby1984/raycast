@@ -39,6 +39,12 @@ public final class Vec2d
 		return this;
 	}
 	
+	public final Vec2d sub(Vec2d other) {
+		this.x -= other.x;
+		this.y -= other.y;
+		return this;
+	}
+	
 	public final Vec2d normalize() 
 	{
 		double len = x*x + y*y;
@@ -58,6 +64,12 @@ public final class Vec2d
 			return this.x == other.x && this.y == other.y;
 		}
 		return false;
+	}
+	
+	public final Vec2d flip() {
+		this.x = -this.x;
+		this.y = -this.y;
+		return this;
 	}
 	
 	public final Vec2d rotZ(double angleInDeg) 

@@ -36,12 +36,14 @@ public class TileManagerTest extends TestCase {
 	}
 	
 	public void testToLocalCoordinates() {
-		assertEquals( vec2d(0,1) , tileManager.toLocalCoordinates( tileId(0,0), -1, 0 ) );			
-		assertEquals( vec2d(1,1) , tileManager.toLocalCoordinates( tileId(0,0),  0, 0 ) );
-		assertEquals( vec2d(2,1) , tileManager.toLocalCoordinates( tileId(0,0),  1, 0 ) );		
+		assertEquals( vec2d(0.5,1.5) , tileManager.toLocalCoordinates( tileId(0,0), -1, 0 ) );			
+		assertEquals( vec2d(1.5,1.5) , tileManager.toLocalCoordinates( tileId(0,0),  0, 0 ) );
+		assertEquals( vec2d(2.5,1.5) , tileManager.toLocalCoordinates( tileId(0,0),  1, 0 ) );		
 		
-		assertEquals( vec2d(1,0) , tileManager.toLocalCoordinates( tileId(0,0), 0, -1 ) );			
+		assertEquals( vec2d(1.5,-0.5) , tileManager.toLocalCoordinates( tileId(0,0), 0, -1 ) );			
 		assertEquals( vec2d(1,1) , tileManager.toLocalCoordinates( tileId(0,0), 0,  0 ) );
+		assertEquals( vec2d(1,2) , tileManager.toLocalCoordinates( tileId(0,0), 0,  1 ) );			
+		
 		assertEquals( vec2d(1,2) , tileManager.toLocalCoordinates( tileId(0,0), 0,  1 ) );			
 	}
 	

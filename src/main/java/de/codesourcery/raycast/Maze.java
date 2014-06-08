@@ -258,7 +258,7 @@ public final class Maze
 			try {
 			array[x][y]=wall;
 			} catch(ArrayIndexOutOfBoundsException e) {
-				System.err.println("AIOBE ("+x+","+y+")");
+				// System.err.println("AIOBE ("+x+","+y+")");
 			}			
 		}
 	}
@@ -268,7 +268,7 @@ public final class Maze
 			try {
 				array[x][y]=value;
 			} catch(ArrayIndexOutOfBoundsException e) {
-				System.err.println("AIOBE ("+x+","+y+")");
+				// System.err.println("AIOBE ("+x+","+y+")");
 			}
 		}
 	}	
