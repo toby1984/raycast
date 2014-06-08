@@ -108,6 +108,12 @@ public class TileManager {
 		return new Vec2d(x0 , y0 );
 	}
 	
+	public final Vec2d toGlobalCoordinates(TileId tileId,int x,int y) {
+		double x0 = (tileId.x * tileSize) - halfTileSize + x + 0.5;
+		double y0 = (tileId.y * tileSize) - halfTileSize + y + 0.5;
+		return new Vec2d(x0 , y0 );
+	}
+	
 	public final Vec2d toLocalCoordinates(TileId tileId, double globalX , double globalY ) {
 		final Vec2d tileOrigin = getOrigin(tileId);
 		double locX = halfTileSize + (globalX - tileOrigin.x);
@@ -134,16 +140,11 @@ public class TileManager {
 	public final Wall getWallFast(double globalX,double globalY)
 	{
 		// same algorithm as getWallSlow() but without all the intermediate object creation
-//		final int tileX = (int) Math.floor( (globalX + halfTileSize) / tileSize);
-//		final int tileY = (int) Math.floor( (globalY + halfTileSize) / tileSize);
 		
 		final int tileX = (int) Math.floor( (globalX / tileSize) + 0.5d );
 		final int tileY = (int) Math.floor( (globalY / tileSize) + 0.5d );		
 		
 		final TileId tileId = new TileId(tileX,tileY);
-		
-//		final double locX = globalX + halfTileSize - (tileId.x * tileSize);
-//		final double locY = globalY + halfTileSize - (tileId.y * tileSize);
 		
 		final double locX = globalX + (0.5d - tileId.x) * tileSize;
 		final double locY = globalY + (0.5d - tileId.y) * tileSize;

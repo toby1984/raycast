@@ -33,6 +33,12 @@ public final class Vec2d
 	
 	public final Vec2d set(Vec2d other) { this.x = other.x ; this.y = other.y ; return this; }
 
+	public final Vec2d multiplyAndAdd(Vec2d other,double factor) {
+		this.x += (other.x*factor);
+		this.y += (other.y*factor);
+		return this;
+	}
+	
 	public final Vec2d add(Vec2d other) {
 		this.x += other.x;
 		this.y += other.y;

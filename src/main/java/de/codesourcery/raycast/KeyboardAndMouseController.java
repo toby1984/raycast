@@ -53,8 +53,8 @@ public class KeyboardAndMouseController extends KeyboardController {
 		}
 	};
 	
-	public KeyboardAndMouseController(Player p) {
-		super(p);
+	public KeyboardAndMouseController(Player p,RadarRenderer renderer) {
+		super(p,renderer);
 	}
 	
 	@Override

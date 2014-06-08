@@ -23,6 +23,9 @@ public abstract class Player
 	public static final float MAX_Z = 5;
 	public static final float MAX_ACCELERATION = 2;
 	
+	private static final Vec2d INITIAL_HEADING = new Vec2d(0,-1); // 0 degrees heading
+	
+	public double heading;
 	public final Vec2d position;
 	public final Vec2d direction;
 	
@@ -32,18 +35,15 @@ public abstract class Player
 	
 	private boolean hasMoved = true;
 	
-	public Player(Vec2d pos,Vec2d direction) {
+	public Player(Vec2d pos) {
 		this.position = new Vec2d(pos);
-		this.direction = new Vec2d(direction);
-		this.direction.normalize();
+		this.direction = new Vec2d(INITIAL_HEADING);
 	}
 	
 	public boolean hasMoved() {
-		return hasMoved;
-	}
-	
-	public void clearMoved() {
+		final boolean result = hasMoved;
 		hasMoved = false;
+		return result;
 	}
 	
 	private boolean setMoved(boolean hasMoved) {
@@ -81,15 +81,21 @@ public abstract class Player
 	
 	public boolean strafeRight(double factor) 
 	{
-		final Vec2d strafeDir = new Vec2d(direction).rotZ(-90).scale( factor );
+		final Vec2d strafeDir = new Vec2d(-direction.y,direction.x).scale( factor );		
 		double newX = position.x + strafeDir.x;
 		double newY = position.y + strafeDir.y;
 		return setMoved( maybeMoveTo(newX, newY) ); 
 	}	
 	
 	public boolean rotate(double angleInDegrees) {
-		direction.rotZ( angleInDegrees );
-		direction.normalize();
+		heading += angleInDegrees;
+		if ( heading < 0 ) {
+			heading += 360;
+		}
+		if ( heading >= 360 ) {
+			heading -= 360;
+		}		
+		direction.set( new Vec2d(INITIAL_HEADING).rotZ( heading ) );
 		hasMoved = true;
 		return true;
 	}

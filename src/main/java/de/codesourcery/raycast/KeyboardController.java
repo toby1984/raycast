@@ -25,6 +25,7 @@ import javax.swing.JComponent;
 public class KeyboardController implements InputController {
 
 	protected final Player player;
+	protected final RadarRenderer renderer;
 	protected JComponent component;
 	
 	private final Set<Integer> pressedKeys = new HashSet<>();
@@ -66,6 +67,9 @@ public class KeyboardController implements InputController {
 	
 	public void processInput() 
 	{
+		ifPressed( KeyEvent.VK_PLUS , () -> { renderer.zoomIn(0.1); } ,
+				   KeyEvent.VK_MINUS , () -> { renderer.zoomOut(0.1); } );
+		
 		ifPressed( KeyEvent.VK_SPACE  , player::jump );
 		ifPressed( KeyEvent.VK_A , () -> { player.strafeLeft( TRANSLATION_SPEED ); } , 
 				   KeyEvent.VK_D , () -> { player.strafeRight( TRANSLATION_SPEED ); } );
@@ -77,8 +81,9 @@ public class KeyboardController implements InputController {
 				   KeyEvent.VK_S , () -> { player.backward( TRANSLATION_SPEED ); } );		
 	}
 	
-	public KeyboardController(Player p) {
+	public KeyboardController(Player p,RadarRenderer renderer) {
 		this.player = p;
+		this.renderer = renderer;
 	}
 	
 	@Override

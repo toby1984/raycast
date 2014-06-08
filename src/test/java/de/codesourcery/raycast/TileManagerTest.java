@@ -40,11 +40,52 @@ public class TileManagerTest extends TestCase {
 		assertEquals( vec2d(1.5,1.5) , tileManager.toLocalCoordinates( tileId(0,0),  0, 0 ) );
 		assertEquals( vec2d(2.5,1.5) , tileManager.toLocalCoordinates( tileId(0,0),  1, 0 ) );		
 		
-		assertEquals( vec2d(1.5,-0.5) , tileManager.toLocalCoordinates( tileId(0,0), 0, -1 ) );			
-		assertEquals( vec2d(1,1) , tileManager.toLocalCoordinates( tileId(0,0), 0,  0 ) );
-		assertEquals( vec2d(1,2) , tileManager.toLocalCoordinates( tileId(0,0), 0,  1 ) );			
+		assertEquals( vec2d(0.5,0.5) , tileManager.toLocalCoordinates( tileId(0,0), -1, -1 ) );			
+		assertEquals( vec2d(1.5,0.5) , tileManager.toLocalCoordinates( tileId(0,0), 0,  -1 ) );
+		assertEquals( vec2d(2.5,0.5) , tileManager.toLocalCoordinates( tileId(0,0), 1,  -1 ) );			
+	}
+	
+	public void testToGlobalCoordinates() 
+	{
+		assertEquals( vec2d(-1, -4 ) , tileManager.toGlobalCoordinates( new TileId(0,-1), 0, 0) ) ;
+		assertEquals( vec2d( 0, -4 ) , tileManager.toGlobalCoordinates( new TileId(0,-1), 1, 0) ) ;
+		assertEquals( vec2d( 1, -4 ) , tileManager.toGlobalCoordinates( new TileId(0,-1), 2, 0) ) ;		
+		assertEquals( vec2d(-1, -3 ) , tileManager.toGlobalCoordinates( new TileId(0,-1), 0, 1) ) ;
+		assertEquals( vec2d( 0, -3 ) , tileManager.toGlobalCoordinates( new TileId(0,-1), 1, 1) ) ;
+		assertEquals( vec2d( 1, -3 ) , tileManager.toGlobalCoordinates( new TileId(0,-1), 2, 1) ) ;		
+		assertEquals( vec2d(-1, -2 ) , tileManager.toGlobalCoordinates( new TileId(0,-1), 0, 2) ) ;
+		assertEquals( vec2d( 0, -2 ) , tileManager.toGlobalCoordinates( new TileId(0,-1), 1, 2) ) ;
+		assertEquals( vec2d( 1, -2 ) , tileManager.toGlobalCoordinates( new TileId(0,-1), 2, 2) ) ;	
 		
-		assertEquals( vec2d(1,2) , tileManager.toLocalCoordinates( tileId(0,0), 0,  1 ) );			
+		assertEquals( vec2d(-1, -1 ) , tileManager.toGlobalCoordinates( new TileId(0,0), 0, 0) ) ;
+		assertEquals( vec2d( 0, -1 ) , tileManager.toGlobalCoordinates( new TileId(0,0), 1, 0) ) ;
+		assertEquals( vec2d( 1, -1 ) , tileManager.toGlobalCoordinates( new TileId(0,0), 2, 0) ) ;		
+		assertEquals( vec2d(-1, 0 ) , tileManager.toGlobalCoordinates(  new TileId(0,0), 0, 1) ) ;
+		assertEquals( vec2d( 0, 0 ) , tileManager.toGlobalCoordinates(  new TileId(0,0), 1, 1) ) ;
+		assertEquals( vec2d( 1, 0 ) , tileManager.toGlobalCoordinates(  new TileId(0,0), 2, 1) ) ;		
+		assertEquals( vec2d(-1, 1 ) , tileManager.toGlobalCoordinates(  new TileId(0,0), 0, 2) ) ;
+		assertEquals( vec2d( 0, 1 ) , tileManager.toGlobalCoordinates(  new TileId(0,0), 1, 2) ) ;
+		assertEquals( vec2d( 1, 1 ) , tileManager.toGlobalCoordinates(  new TileId(0,0), 2, 2) ) ;	
+		
+		assertEquals( vec2d(-4, -1 ) , tileManager.toGlobalCoordinates( new TileId(-1,0), 0, 0) ) ;
+		assertEquals( vec2d(-3, -1 ) , tileManager.toGlobalCoordinates( new TileId(-1,0), 1, 0) ) ;
+		assertEquals( vec2d(-2, -1 ) , tileManager.toGlobalCoordinates( new TileId(-1,0), 2, 0) ) ;		
+		assertEquals( vec2d(-4, 0 ) , tileManager.toGlobalCoordinates(  new TileId(-1,0), 0, 1) ) ;
+		assertEquals( vec2d(-3, 0 ) , tileManager.toGlobalCoordinates(  new TileId(-1,0), 1, 1) ) ;
+		assertEquals( vec2d(-2, 0 ) , tileManager.toGlobalCoordinates(  new TileId(-1,0), 2, 1) ) ;		
+		assertEquals( vec2d(-4, 1 ) , tileManager.toGlobalCoordinates(  new TileId(-1,0), 0, 2) ) ;
+		assertEquals( vec2d(-3, 1 ) , tileManager.toGlobalCoordinates(  new TileId(-1,0), 1, 2) ) ;
+		assertEquals( vec2d(-2, 1 ) , tileManager.toGlobalCoordinates(  new TileId(-1,0), 2, 2) ) ;		
+		
+		assertEquals( vec2d( 2, -1 ) , tileManager.toGlobalCoordinates( new TileId(1,0), 0, 0) ) ;
+		assertEquals( vec2d( 3, -1 ) , tileManager.toGlobalCoordinates( new TileId(1,0), 1, 0) ) ;
+		assertEquals( vec2d( 4, -1 ) , tileManager.toGlobalCoordinates( new TileId(1,0), 2, 0) ) ;		
+		assertEquals( vec2d( 2, 0 ) , tileManager.toGlobalCoordinates(  new TileId(1,0), 0, 1) ) ;
+		assertEquals( vec2d( 3, 0 ) , tileManager.toGlobalCoordinates(  new TileId(1,0), 1, 1) ) ;
+		assertEquals( vec2d( 4, 0 ) , tileManager.toGlobalCoordinates(  new TileId(1,0), 2, 1) ) ;		
+		assertEquals( vec2d( 2, 1 ) , tileManager.toGlobalCoordinates(  new TileId(1,0), 0, 2) ) ;
+		assertEquals( vec2d( 3, 1 ) , tileManager.toGlobalCoordinates(  new TileId(1,0), 1, 2) ) ;
+		assertEquals( vec2d( 4, 1 ) , tileManager.toGlobalCoordinates(  new TileId(1,0), 2, 2) ) ;			
 	}
 	
 	public void testGetTileOrigin() {

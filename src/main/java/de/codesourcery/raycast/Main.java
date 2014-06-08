@@ -63,7 +63,9 @@ public class Main {
 	{
 		tileManager = new TileManager( new TileFactory(25) );
 		
-		player = new Player( tileManager.getStartingPosition() ,  new Vec2d( -1 , 0 ) ) 
+//		final Vec2d startingPosition = tileManager.getStartingPosition();
+		final Vec2d startingPosition = new Vec2d(0,0);
+		player = new Player( startingPosition ) 
 		{
 			@Override
 			protected boolean canMoveTo(double newX, double newY) 
@@ -91,7 +93,7 @@ public class Main {
 		frame.pack();
 		frame.setVisible(true);
 		
-		inputController = new KeyboardAndMouseController(panel.player);
+		inputController = new KeyboardAndMouseController(panel.player,panel.radarRenderer);
 		inputController.attach( panel );
 		panel.setFocusable( true );
 		panel.requestFocus();
@@ -133,9 +135,8 @@ public class Main {
 		/* ===  REPAINT === */
 		
 		// update FPS
-		if ( player.hasMoved() ) 
+		if ( player.hasMoved() || panel.radarRenderer.hasZoomFactorChanged() ) 
 		{
-			player.clearMoved();
 			totalFrames++;
 			totalFrameTimeSeconds+=deltaSeconds;
 			float avgSecondsPerFrame = totalFrameTimeSeconds / totalFrames;
@@ -163,12 +164,12 @@ public class Main {
 		
 		private final boolean renderDistanceFog;
 		public final Player player;
-		private final RadarRenderer tileRenderer;
+		public final RadarRenderer radarRenderer;
 		
 		public MyPanel(Player player,boolean renderDistanceFog) 
 		{
 			this.player = player;
-			this.tileRenderer = new RadarRenderer(tileManager, player);
+			this.radarRenderer = new RadarRenderer(tileManager, player);
 			this.renderDistanceFog = renderDistanceFog;
 			if ( renderDistanceFog ) {
 				setOpaque(false); // enable alpha channel support
@@ -207,7 +208,7 @@ public class Main {
 			final int x0 = (int) (getWidth() - width*1.5);
 			final int y0 = 20;
 			
-			tileRenderer.render( new Rectangle(x0,y0,width,height ) , bufferGraphics , getBackground() ) ;
+			radarRenderer.render( new Rectangle(x0,y0,width,height ) , bufferGraphics , getBackground() ) ;
 			
 			// render debug info
 			bufferGraphics.setColor(Color.BLACK);
