@@ -73,14 +73,21 @@ public class RadarRenderer {
 				final double x1 = x0 + stepX;
 				final double y1 = y0 + stepY;
 				
-				final Wall wall = tileManager.getWall( x , y );
-				if ( wall != null ) 
+				final Cell cell = tileManager.getCellAt( x , y );
+				if ( cell.isWall() ) 
 				{
-					g.setColor(wall.darkColor);
+					g.setColor(cell.darkColor);
 					
 					final int w = (int) Math.max( x1-x0 , 1 );
 					final int h = (int) Math.max( y1-y0 , 1 );					
 					g.fillRect( (int) x0, (int) y0 , w , h);
+				} 
+				else if ( cell.hasPill() ) 
+				{
+					final int w = (int) Math.max( (x1-x0)/2.0 , 1 );
+					final int h = (int) Math.max( (y1-y0)/2.0 , 1 );
+					g.setColor(Color.YELLOW);
+					g.fillArc((int) (x0+w/2) , (int) (y0+h/2) , w , h , 0, 360 );
 				}
 			}
 		}

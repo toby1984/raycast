@@ -17,12 +17,47 @@ package de.codesourcery.raycast;
 
 import java.awt.Color;
 
-public final class Wall {
+public final class Cell {
 	
 	public final Color lightColor;
 	public final Color darkColor;
 	
-	public Wall(Color color1) {
+	private boolean hasPill;
+	
+	private Cell(boolean hasPill) {
+		this.hasPill = hasPill;
+		this.lightColor = this.darkColor = null;
+	}
+	
+	public static Cell cellWithPill() {
+		return new Cell(true);
+	}
+	
+	public static Cell emptyCell() {
+		return new Cell(false);
+	}	
+	
+	public static Cell wall(Color wallColor) {
+		return new Cell(wallColor);
+	}
+	
+	public boolean hasPill() {
+		return hasPill && ! isWall();
+	}
+	
+	public boolean consumePill() {
+		if ( hasPill() ) {
+			hasPill = false;
+			return true;
+		}
+		return false;
+	}
+	
+	public boolean isWall() {
+		return lightColor != null;
+	}
+	
+	public Cell(Color color1) {
 		this.lightColor=color1;
 		this.darkColor=darken( color1 );
 	}

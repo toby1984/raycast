@@ -30,10 +30,13 @@ public class TileFactory {
 		this.tileSize = tileSize;
 	}
 	
-	protected final Wall[][] newWallArray() {
-		final Wall[][] result = new Wall[tileSize][tileSize];
+	protected final Cell[][] newWallArray() {
+		final Cell[][] result = new Cell[tileSize][tileSize];
 		for ( int x = 0 ; x < tileSize ;x++ ) {
-			result[x] = new Wall[tileSize];
+			result[x] = new Cell[tileSize];
+			for ( int i =0 ; i < tileSize ; i++ ) {
+				result[x][i]=Cell.cellWithPill();
+			}
 		}
 		return result;
 	}
@@ -46,10 +49,10 @@ public class TileFactory {
 	
 	public Tile createMazeTile(TileId coordinates) 
 	{
-		Maze maze = new Maze(tileSize/3);
+		Maze maze = new Maze(tileSize/2);
 		maze.generateMaze( coordinates.hashCode()*3 );
 		
-		final Wall[][] walls = newWallArray();
+		final Cell[][] walls = newWallArray();
 		Maze.renderMaze(maze, walls , tileSize , tileSize , false );
 		return new Tile(coordinates,tileSize, walls );
 	}	
@@ -141,28 +144,28 @@ public class TileFactory {
 				{ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 }			
 			};		
 		
-		final Wall[][] result = newWallArray();
+		final Cell[][] result = newWallArray();
 		for ( int x = 0 ; x < tileSize ; x++ ) 
 		{
 			for ( int y = 0 ; y < tileSize ; y++ ) 
 			{
-				final Wall tile;
+				final Cell tile;
 				switch (map[x][y]) 
 				{
 					case 1:
-						tile = new Wall(Color.RED);
+						tile = Cell.wall(Color.RED);
 						break; 
 					case 2:
-						tile = new Wall(Color.GREEN);						
+						tile = Cell.wall(Color.GREEN);						
 						break; 
 					case 3:
-						tile = new Wall(Color.BLUE);
+						tile = Cell.wall(Color.BLUE);
 						break; 
 					case 4:
-						tile = new Wall(Color.ORANGE);
+						tile = Cell.wall(Color.ORANGE);
 						break; 
 					default:
-						tile = null;
+						tile = Cell.cellWithPill();
 						break; 
 				}	
 				result[x][y]=tile;

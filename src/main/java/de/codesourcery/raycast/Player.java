@@ -29,6 +29,8 @@ public abstract class Player
 	public final Vec2d position;
 	public final Vec2d direction;
 	
+	public int score;
+	
 	private float zAcceleration;
 	private float zVelocity;	
 	public float z;
@@ -49,6 +51,10 @@ public abstract class Player
 	private boolean setMoved(boolean hasMoved) {
 		this.hasMoved = hasMoved;
 		return hasMoved;
+	}
+	
+	public void incScore(int value) {
+		score += value;
 	}
 	
 	public boolean forward(double factor) 

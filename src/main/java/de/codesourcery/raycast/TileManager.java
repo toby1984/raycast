@@ -20,7 +20,7 @@ import java.util.Random;
 
 public class TileManager {
 
-	private static final boolean DEBUG = false;
+	private static final boolean DEBUG = true;
 	
 	private final TileFactory tileFactory;
 
@@ -31,15 +31,20 @@ public class TileManager {
 	private final LinkedHashMap<TileId, Tile> tileCache = new LinkedHashMap<TileId,Tile>(10,0.75f,true) 
 	{
 		protected boolean removeEldestEntry(java.util.Map.Entry<TileId,Tile> eldest) {
-			if( size() > 10 ) {
-				if ( DEBUG) {
-					System.out.println("Unloading tile "+eldest.getKey());
-				}
+			if( size() > 30 ) 
+			{
+				unloadTile(eldest.getValue());
 				return true;
 			}
 			return false;
 		}
 	};
+	
+	private void unloadTile(Tile tile) {
+		if ( DEBUG) {
+			System.out.println("Unloading tile "+tile);
+		}		
+	}
 	
 	public TileManager(TileFactory tileFactory) {
 		this.tileFactory = tileFactory;
@@ -66,7 +71,7 @@ public class TileManager {
 		return cached;
 	}
 	
-	public Vec2d getStartingPosition() 
+	public Vec2d findStartingPosition(GameLogic gameLogic) 
 	{
 		final Tile tile = getTile( new TileId(0,0) );
 		
@@ -75,7 +80,7 @@ public class TileManager {
 		{
 			int x = rnd.nextInt( (int) tileSize );
 			int y = rnd.nextInt( (int) tileSize );
-				if ( tile.isFree( x , y ) ) {
+				if ( gameLogic.canPlayerMoveTo( tile.getCellAt( x , y ) ) ) {
 					double x0 = (double) x - Math.floor( halfTileSize );
 					double y0 = (double) y - Math.floor( halfTileSize );
 					return new Vec2d(x0,y0);
@@ -121,16 +126,21 @@ public class TileManager {
 		return new Vec2d(locX,locY);
 	}
 	
-	public final Wall getWall(double globalX,double globalY)
+	public final Cell getCellAt(Vec2d global)
 	{
-		return getWallFast(globalX,globalY);
+		return getCellAt(global.x,global.y);
+	}
+	
+	public final Cell getCellAt(double globalX,double globalY)
+	{
+		return getCellFast(globalX,globalY);
 	}	
 	
-	private final Wall getWallSlow(double globalX,double globalY)
+	private final Cell getWallSlow(double globalX,double globalY)
 	{
 		final TileId tileId = getTileId( globalX , globalY);
 		final Vec2d local = toLocalCoordinates( tileId , globalX, globalY);
-		return getTile( tileId ).getWall( (int) local.x ,  (int) local.y );		
+		return getTile( tileId ).getCellAt( (int) local.x ,  (int) local.y );		
 	}
 	
 	public final Vec2d toLocalCoordinates(double globalX , double globalY ) 
@@ -142,7 +152,7 @@ public class TileManager {
 		return new Vec2d(locX,locY);
 	}	
 	
-	private final Wall getWallFast(double globalX,double globalY)
+	private final Cell getCellFast(double globalX,double globalY)
 	{
 		// same algorithm as getWallSlow() but without all the intermediate object creation
 		
@@ -155,7 +165,7 @@ public class TileManager {
 		final double locY = globalY + (0.5d - tileId.y) * tileSize;
 		
 		try {
-			return getTile( tileId ).getWall( (int) locX ,  (int) locY );
+			return getTile( tileId ).getCellAt( (int) locX ,  (int) locY );
 		}
 		catch(ArrayIndexOutOfBoundsException e) {
 			System.err.println("getWallFast(): Failed for global ("+globalX+","+globalY+") that resolved to tile "+

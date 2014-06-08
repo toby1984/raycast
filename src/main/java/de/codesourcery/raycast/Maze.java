@@ -21,6 +21,7 @@ import java.awt.Point;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.function.Supplier;
 
 public final class Maze 
 {
@@ -162,7 +163,7 @@ public final class Maze
 		for (int i = 0; i < directions.length; i++) 
 		{
 			final Point p = directions[i];
-			Room n = getCell( x+p.x   , y+p.y ); 
+			Room n = getRoom( x+p.x   , y+p.y ); 
 			if ( n != null && ! n.visited ) {
 				return n;
 			}                 
@@ -170,7 +171,7 @@ public final class Maze
 		return null;
 	}
 
-	protected Room getCell(int x,int y) 
+	protected Room getRoom(int x,int y) 
 	{
 		if ( x >= 0 && x < size && y>=0 && y < size ) {
 			return rooms[ x + y * size ];
@@ -187,7 +188,7 @@ public final class Maze
 		{
 			for ( int x = 0 ; x < maze.size ; x++ ) 
 			{
-				final Room cell = maze.getCell( x,y );
+				final Room cell = maze.getRoom( x,y );
 
 				final int xmin = 10+(x * cellWidth);
 				final int xmax = xmin + cellWidth;
@@ -211,17 +212,17 @@ public final class Maze
 		}
 	}
 	
-	public static void renderMaze(Maze maze,Wall[][] array,int w,int h,boolean renderBorder) 
+	public static void renderMaze(Maze maze,Cell[][] array,int w,int h,boolean renderBorder) 
 	{
 		final int cellWidth = w / maze.size;
 		final int cellHeight = h / maze.size;                
 
-		final Wall wall = new Wall(Color.RED);
+		final Supplier<Cell> cellSupplier= () -> { return Cell.wall(Color.RED); };
 		for ( int y = 0 ; y < maze.size ; y++ ) 
 		{
 			for ( int x = 0 ; x < maze.size ; x++ ) 
 			{
-				final Room cell = maze.getCell( x,y );
+				final Room room = maze.getRoom( x,y );
 
 				final int xmin = x * cellWidth;
 				final int xmax = xmin + cellWidth;
@@ -229,44 +230,44 @@ public final class Maze
 				final int ymin = y * cellHeight;
 				final int ymax = ymin + cellHeight;
 
-				if ( cell.north == null ) { // draw north wall
-					drawHorizontalLine(ymin, xmin, xmax, array, wall );
+				if ( room.north == null ) { // draw north wall
+					drawHorizontalLine(ymin, xmin, xmax, array, cellSupplier );
 				} 
-				if ( cell.south == null ) { // draw south wall
-					drawHorizontalLine(ymax, xmin, xmax, array, wall );
+				if ( room.south == null ) { // draw south wall
+					drawHorizontalLine(ymax, xmin, xmax, array, cellSupplier );
 				}
-				if ( cell.west == null ) { // draw west wall
-					drawVerticalLine(xmin, ymin, ymax, array, wall );
+				if ( room.west == null ) { // draw west wall
+					drawVerticalLine(xmin, ymin, ymax, array, cellSupplier );
 				} 
-				if ( cell.east == null ) { // draw east wall
-					drawVerticalLine(xmax, ymin, ymax, array, wall );
+				if ( room.east == null ) { // draw east wall
+					drawVerticalLine(xmax, ymin, ymax, array, cellSupplier );
 				}                        
 			}
 		}
 		
 		if ( ! renderBorder ) {
-			drawHorizontalLine( 0 , 0 , w , array, null );
-			drawHorizontalLine( h-1 , 0 , w , array, null );
+			drawHorizontalLine( 0 , 0 , w , array, Cell::cellWithPill );
+			drawHorizontalLine( h-1 , 0 , w , array, Cell::cellWithPill );
 			
-			drawVerticalLine(0, 0, h-1 , array, null );
-			drawVerticalLine(w-1, 0, h-1 , array, null );			
+			drawVerticalLine(0, 0, h-1 , array, Cell::cellWithPill );
+			drawVerticalLine(w-1, 0, h-1 , array, Cell::cellWithPill );			
 		}
 	}	
 	
-	private static void drawHorizontalLine(int y, int xmin,int xmax,Wall[][] array,Wall wall) {
+	private static void drawHorizontalLine(int y, int xmin,int xmax,Cell[][] array,Supplier<Cell> supplier) {
 		for ( int x = xmin ; x <= xmax ; x++ ) {
 			try {
-			array[x][y]=wall;
+			array[x][y]=supplier.get();
 			} catch(ArrayIndexOutOfBoundsException e) {
 				// System.err.println("AIOBE ("+x+","+y+")");
 			}			
 		}
 	}
 	
-	private static void drawVerticalLine(int x, int ymin,int ymax,Wall[][] array,Wall value) {
+	private static void drawVerticalLine(int x, int ymin,int ymax,Cell[][] array,Supplier<Cell> supplier) {
 		for ( int y = ymin ; y <= ymax ; y++ ) {
 			try {
-				array[x][y]=value;
+				array[x][y]=supplier.get();
 			} catch(ArrayIndexOutOfBoundsException e) {
 				// System.err.println("AIOBE ("+x+","+y+")");
 			}
@@ -280,7 +281,7 @@ public final class Maze
 		final Random rnd = new Random(seed);
 		final List<Room> rooms = new ArrayList<>();
 
-		final Room start = getCell(rnd.nextInt(size), rnd.nextInt(size) );
+		final Room start = getRoom(rnd.nextInt(size), rnd.nextInt(size) );
 		rooms.add( start );
 
 		do

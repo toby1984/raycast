@@ -34,8 +34,7 @@ public class Main {
 
 	private static final Dimension FRAME_SIZE = new Dimension(640,480);
 	
-	private static final int MAX_RENDER_DISTANCE = 80;
-	private static final int MAX_RENDER_DISTANCE_SQUARED = MAX_RENDER_DISTANCE*MAX_RENDER_DISTANCE;
+	private static final int MAX_RENDER_DISTANCE = 20;
 	
 	private static final boolean RENDER_DISTANCE_FOG = false;
 	
@@ -43,13 +42,14 @@ public class Main {
 
 	private static final boolean BENCHMARK_MODE = false;
 	
-	private TileManager tileManager;
-	private Player player;
-	private InputController inputController; 	
-	private MyPanel panel;
+	protected TileManager tileManager;
+	protected Player player;
+	protected InputController inputController; 	
+	protected MyPanel panel;
+	protected final GameLogic gameLogic = new GameLogic();
 	
-	private long totalFrames;
-	private float totalFrameTimeSeconds;
+	protected long totalFrames;
+	protected float totalFrameTimeSeconds;
 	
 	protected enum Side {
 		NORTH_SOUTH, EAST_WEST;
@@ -63,7 +63,7 @@ public class Main {
 	{
 		tileManager = new TileManager( new TileFactory(25) );
 		
-		final Vec2d startingPosition = tileManager.getStartingPosition();
+		final Vec2d startingPosition = tileManager.findStartingPosition( gameLogic );
 		player = new Player( startingPosition ) 
 		{
 			@Override
@@ -75,9 +75,11 @@ public class Main {
 			}
 			
 			private boolean isFree(double x,double y) {
-				return tileManager.getWall( x ,y ) == null;
+				return gameLogic.canPlayerMoveTo(  tileManager.getCellAt( x ,y ) );
 			}
 		};
+		
+		gameLogic.consumePill( player , tileManager.getCellAt( startingPosition ) );
 		
 		panel = new MyPanel( player , RENDER_DISTANCE_FOG );
 		
@@ -130,11 +132,12 @@ public class Main {
 		
 		// update player position
 		player.tick( deltaSeconds );
+		boolean pillConsumed = gameLogic.consumePill( player , tileManager.getCellAt( player.position ) );
 		
 		/* ===  REPAINT === */
 		
 		// update FPS
-		if ( player.hasMoved() || panel.radarRenderer.hasZoomFactorChanged() ) 
+		if ( pillConsumed || player.hasMoved() || panel.radarRenderer.hasZoomFactorChanged() ) 
 		{
 			totalFrames++;
 			totalFrameTimeSeconds+=deltaSeconds;
@@ -213,14 +216,23 @@ public class Main {
 			bufferGraphics.setColor(Color.BLACK);
 			
 			final TileId tileId = tileManager.getTileId( player.position );
-			bufferGraphics.drawString( "FPS:"+ DF.format( fps ),10,15);
-			bufferGraphics.drawString( "Player position: "+player.position+" @ tile "+tileId.x+" , "+tileId.y , 10 , 30 );
-			bufferGraphics.drawString( "Player heading : "+player.direction , 10 , 45 );			
+			int y = 15;
+			bufferGraphics.drawString( "Score:"+ player.score ,10,y);
+			y+=15;
+			
+			bufferGraphics.drawString( "FPS:"+ DF.format( fps ),10,y);
+			y+=15;
+			
+			bufferGraphics.drawString( "Player position: "+player.position+" @ tile "+tileId.x+" , "+tileId.y , 10 , y );
+			y+=15;
+			
+			bufferGraphics.drawString( "Player heading : "+player.direction , 10 , y );			
+			y+=15;
 			
 			g.drawImage( image ,  0 , 0 , null );
 			
 			final long totalTime = System.currentTimeMillis() - start;
-			g.drawString( "Rendering time: "+totalTime+" ms" , 10 , 60 );
+			g.drawString( "Rendering time: "+totalTime+" ms" , 10 , y );
 		}
 		
 		protected void render(Graphics g) 
@@ -288,7 +300,8 @@ forLoop:
 				// perform DDA
 				Side side = Side.NORTH_SOUTH; // was a NS or a EW wall hit?
 				
-				Wall wall = null;
+				Cell cell = null;
+				double perpWallDist=0.0;	
 				while ( true ) 
 				{
 					// jump to next map square, OR in x-direction, OR in y-direction
@@ -301,24 +314,26 @@ forLoop:
 						mapY += stepY;
 						side = Side.NORTH_SOUTH;
 					}
+					
+					// Calculate distance projected on camera direction (oblique distance will give fisheye effect!)
+					if (side == Side.EAST_WEST) {
+						perpWallDist = Math.abs((mapX - rayPos.x + (1 - stepX) / 2) / rayDir.x);
+					} else {
+						perpWallDist = Math.abs((mapY - rayPos.y + (1 - stepY) / 2) / rayDir.y);
+					}
+					
 					// Check if ray has hit a wall
-					wall = tileManager.getWall( mapX ,  mapY );
-					if ( wall != null ) {
+					cell = tileManager.getCellAt( mapX ,  mapY );
+					if ( cell.isWall() ) {
 						break;
 					} 
-					double dx = mapX - rayPos.x;
-					double dy = mapY - rayPos.y;
-					if ( (dx*dx+dy*dy) > MAX_RENDER_DISTANCE_SQUARED ) {
+					else if ( cell.hasPill() ) {
+						// TODO: Render pill...
+					}
+					
+					if ( perpWallDist > MAX_RENDER_DISTANCE ) {
 						continue forLoop;
 					}
-				}
-				
-				// Calculate distance projected on camera direction (oblique distance will give fisheye effect!)
-				final double perpWallDist;				
-				if (side == Side.EAST_WEST) {
-					perpWallDist = Math.abs((mapX - rayPos.x + (1 - stepX) / 2) / rayDir.x);
-				} else {
-					perpWallDist = Math.abs((mapY - rayPos.y + (1 - stepY) / 2) / rayDir.y);
 				}
 				
 				// Calculate line y-offset based on the player's current Z coordinate and wall distance
@@ -340,7 +355,7 @@ forLoop:
 
 				// choose wall color
 				// give x and y sides different brightness
-				Color color = side == Side.EAST_WEST ? wall.darkColor : wall.lightColor;
+				Color color = side == Side.EAST_WEST ? cell.darkColor : cell.lightColor;
 
 				// distance fog - calculate alpha channel value depending on distance				
 				if ( renderDistanceFog ) 

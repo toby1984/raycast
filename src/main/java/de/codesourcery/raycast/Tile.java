@@ -19,10 +19,10 @@ package de.codesourcery.raycast;
 public class Tile {
 
 	public final TileId tileId;
-	private final Wall[][] tiles;
+	private final Cell[][] tiles;
 	private final int tileSize;
 	
-	protected Tile(TileId tileId,int tileSize , Wall[][] tiles) 
+	protected Tile(TileId tileId,int tileSize , Cell[][] tiles) 
 	{
 		if ( tileId == null ) {
 			throw new IllegalArgumentException("tileId must not be NULL");
@@ -43,15 +43,7 @@ public class Tile {
 		return tileSize;
 	}
 	
-	public Wall getWall(int x,int y) {
+	public Cell getCellAt(int x,int y) {
 		return tiles[x][y];
 	}
-	
-	public boolean isOccupied(int x,int y) {
-		return tiles[x][y] != null;
-	}
-	
-	public boolean isFree(int x,int y) {
-		return tiles[x][y] == null;
-	}	
 }
