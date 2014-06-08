@@ -19,6 +19,8 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
@@ -133,6 +135,7 @@ public class Main {
 		// update FPS
 		if ( player.hasMoved() ) 
 		{
+			player.clearMoved();
 			totalFrames++;
 			totalFrameTimeSeconds+=deltaSeconds;
 			float avgSecondsPerFrame = totalFrameTimeSeconds / totalFrames;
@@ -156,14 +159,16 @@ public class Main {
 		public float fps;
 		
 		private BufferedImage buffer;
-		private Graphics bufferGraphics;
+		private Graphics2D bufferGraphics;
 		
 		private final boolean renderDistanceFog;
 		public final Player player;
+		private final RadarRenderer tileRenderer;
 		
 		public MyPanel(Player player,boolean renderDistanceFog) 
 		{
 			this.player = player;
+			this.tileRenderer = new RadarRenderer(tileManager, player);
 			this.renderDistanceFog = renderDistanceFog;
 			if ( renderDistanceFog ) {
 				setOpaque(false); // enable alpha channel support
@@ -189,19 +194,33 @@ public class Main {
 			long start = System.currentTimeMillis();
 			final BufferedImage image = getBuffer();
 
+			// clear buffer
 			bufferGraphics.setColor( getBackground() );
 			bufferGraphics.fillRect( 0 ,  0 ,  image.getWidth() ,  image.getHeight() );
+			
 			render(bufferGraphics);
 			
+			// render tile
+			final int width = (int) (getWidth()*0.3);
+			final int height = (int) (getWidth()*0.3);
+			
+			final int x0 = (int) (getWidth() - width*1.5);
+			final int y0 = 20;
+			
+			tileRenderer.render( new Rectangle(x0,y0,width,height ) , bufferGraphics , getBackground() ) ;
+			
+			// render debug info
 			bufferGraphics.setColor(Color.BLACK);
 			
 			final TileId tileId = tileManager.getTileId( player.position );
-			bufferGraphics.drawString( "FPS:"+ DF.format( fps ) + " ( "+player.position+" @ tile "+tileId.x+" , "+tileId.y+" )", 10 , 15 );
+			bufferGraphics.drawString( "FPS:"+ DF.format( fps ),10,15);
+			bufferGraphics.drawString( "Player position: "+player.position+" @ tile "+tileId.x+" , "+tileId.y , 10 , 30 );
+			bufferGraphics.drawString( "Player heading : "+player.direction , 10 , 45 );			
 			
 			g.drawImage( image ,  0 , 0 , null );
 			
 			final long totalTime = System.currentTimeMillis() - start;
-			g.drawString( "Frame time: "+totalTime+" ms" , 10 , 30 );
+			g.drawString( "Rendering time: "+totalTime+" ms" , 10 , 60 );
 		}
 		
 		protected void render(Graphics g) 
@@ -217,9 +236,11 @@ public class Main {
 			 */
 			
 			cameraPlane.set( player.direction );
-			cameraPlane.rotY( -90 );
+			cameraPlane.rotZ( -90 );
 			cameraPlane.scale(0.66); // player direction is always a normalized vector 
 			
+			System.out.println("=========== Rendering ============");
+			final int xCenter = w/2;
 forLoop:			
 			for (int x = 0; x < w; x++) 
 			{
@@ -227,8 +248,12 @@ forLoop:
 				final double cameraX = 2.0 * x / w - 1.0; // x-coordinate in camera space (0...1)
 				
 				rayPos.set( player.position );
-				rayDir.set( player.direction );
 				
+				// which box of the map we're in
+				int mapX = (int) rayPos.x;
+				int mapY = (int) rayPos.y;				
+				
+				rayDir.set( player.direction );
 				rayDir.x += cameraPlane.x * cameraX;
 				rayDir.y += cameraPlane.y * cameraX;
 
@@ -237,10 +262,6 @@ forLoop:
 				final double deltaDistY = Math.sqrt(1 + (rayDir.x * rayDir.x) / (rayDir.y * rayDir.y));
 
 				// calculate step and initial sideDist
-				
-				// which box of the map we're in
-				int mapX = (int) rayPos.x;
-				int mapY = (int) rayPos.y;
 				
 				// what direction to step in x or y-direction (either +1 or -1)
 				final int stepX;
@@ -305,7 +326,7 @@ forLoop:
 				final int lineOffset = (int) ( ( h * zCoordinate ) / perpWallDist);
 				
 				// Calculate height of line to draw on screen
-				final int lineHeight = Math.abs((int) ( 3*h / perpWallDist*0.5f));
+				final int lineHeight = Math.abs((int) ( h / perpWallDist*0.5f));
 				
 				// calculate lowest and highest pixel to fill in current stripe
 				int drawStart = -lineHeight / 2 + h / 2;
@@ -319,7 +340,8 @@ forLoop:
 
 				// choose wall color
 				// give x and y sides different brightness
-				Color color = side == Side.EAST_WEST ? wall.darkColor : wall.lightColor;
+//				Color color = side == Side.EAST_WEST ? wall.darkColor : wall.lightColor;
+				Color color = wall.darkColor;
 
 				// distance fog - calculate alpha channel value depending on distance				
 				if ( renderDistanceFog ) 
@@ -333,6 +355,12 @@ forLoop:
 				} 
 				g.setColor(color);
 				g.drawLine(x, lineOffset+drawStart, x, lineOffset+drawEnd);
+				
+				if ( x == xCenter ) {
+					g.setColor(Color.GREEN);
+					g.drawLine(x,0,x,h);
+					System.out.println("Hit "+side+" wall at ("+mapX+","+mapY+") with distance "+perpWallDist);
+				}				
 			} // end for
 		}
 	}

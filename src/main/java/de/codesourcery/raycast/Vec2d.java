@@ -33,6 +33,12 @@ public final class Vec2d
 	
 	public final Vec2d set(Vec2d other) { this.x = other.x ; this.y = other.y ; return this; }
 
+	public final Vec2d add(Vec2d other) {
+		this.x += other.x;
+		this.y += other.y;
+		return this;
+	}
+	
 	public final Vec2d normalize() 
 	{
 		double len = x*x + y*y;
@@ -54,7 +60,7 @@ public final class Vec2d
 		return false;
 	}
 	
-	public final Vec2d rotY(double angleInDeg) 
+	public final Vec2d rotZ(double angleInDeg) 
 	{
 		double theta = angleInDeg * Math.PI/180f;
 

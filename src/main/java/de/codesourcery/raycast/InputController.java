@@ -19,7 +19,7 @@ import javax.swing.JComponent;
 
 public interface InputController {
 
-	public static final double TRANSLATION_SPEED = 0.1;
+	public static final double TRANSLATION_SPEED = 0.025;
 	
 	public void attach(JComponent comp);
 	

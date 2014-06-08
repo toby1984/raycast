@@ -16,6 +16,7 @@
 package de.codesourcery.raycast;
 
 import java.util.LinkedHashMap;
+import java.util.Random;
 
 public class TileManager {
 
@@ -43,7 +44,11 @@ public class TileManager {
 		this.lastAccessedTile = tileFactory.createTile( new TileId(0,0 ) );
 	}
 	
-	private Tile getTile(TileId tileId) 
+	public int tileSize() {
+		return tileFactory.tileSize;
+	}
+	
+	public Tile getTile(TileId tileId) 
 	{
 		if ( lastAccessedTile.tileId.x == tileId.x && lastAccessedTile.tileId.y == tileId.y ) {
 			return lastAccessedTile;
@@ -59,19 +64,19 @@ public class TileManager {
 	
 	public Vec2d getStartingPosition() 
 	{
-		Tile tile = getTile( new TileId(0,0) );
-		for (int y = 0 ; y < tileSize ; y++ ) 
-		{		
-			for ( int x = 0 ; x < tileSize ; x++ ) 
-			{
+		final Tile tile = getTile( new TileId(0,0) );
+		
+		final Random rnd = new Random(0xdeadbeef);
+		while( true ) 
+		{
+			int x = rnd.nextInt( (int) tileSize );
+			int y = rnd.nextInt( (int) tileSize );
 				if ( tile.isFree( x , y ) ) {
 					double x0 = (double) x - Math.floor( tileSize/2.0);
 					double y0 = (double) y - Math.floor( tileSize/2.0);
 					return new Vec2d(x0,y0);
 				}
-			}
 		}
-		throw new RuntimeException("Failed to find any free location in tile (0,0) ??");
 	}
 	
 	private Tile createTile(TileId tileId) 
@@ -80,8 +85,8 @@ public class TileManager {
 		return tileFactory.createTile( tileId );
 	}	
 	
-	protected final TileId getTileId(Vec2d global) {
-		return getTileId( global.x , global.y );
+	protected final TileId getTileId(Vec2d globalCoordinates) {
+		return getTileId( globalCoordinates.x , globalCoordinates.y );
 	}
 	
 	protected final TileId getTileId(double globalX,double globalY) 
@@ -97,7 +102,7 @@ public class TileManager {
 		return new Vec2d(x0 , y0 );
 	}
 	
-	protected final Vec2d toLocalCoordinates(TileId tileId, double globalX , double globalY ) {
+	public final Vec2d toLocalCoordinates(TileId tileId, double globalX , double globalY ) {
 		final Vec2d tileOrigin = getOrigin(tileId);
 		double locX = (int) halfTileSize + (globalX - tileOrigin.x);
 		double locY = halfTileSize + (globalY - tileOrigin.y );

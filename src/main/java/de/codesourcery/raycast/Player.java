@@ -81,14 +81,14 @@ public abstract class Player
 	
 	public boolean strafeRight(double factor) 
 	{
-		final Vec2d strafeDir = new Vec2d(direction).rotY(-90).scale( factor );
+		final Vec2d strafeDir = new Vec2d(direction).rotZ(-90).scale( factor );
 		double newX = position.x + strafeDir.x;
 		double newY = position.y + strafeDir.y;
 		return setMoved( maybeMoveTo(newX, newY) ); 
 	}	
 	
 	public boolean rotate(double angleInDegrees) {
-		direction.rotY( angleInDegrees );
+		direction.rotZ( angleInDegrees );
 		direction.normalize();
 		hasMoved = true;
 		return true;
